@@ -24,6 +24,8 @@ cc1101 Driver for RC Switch. Mod by Little Satan. With permission to modify and 
 #define   BYTES_IN_RXFIFO   0x7F            //byte number in RXfifo
 #define   max_modul 6
 
+SPIClass CCSPI(HSPI);
+
 byte modulation = 2;
 byte frend0;
 byte chan = 0;
@@ -93,9 +95,9 @@ void ELECHOUSE_CC1101::SpiStart(void)
 
   // enable SPI
   #ifdef ESP32
-  SPI.begin(SCK_PIN, MISO_PIN, MOSI_PIN, SS_PIN);
+  CCSPI.begin(SCK_PIN, MISO_PIN, MOSI_PIN, SS_PIN);
   #else
-  SPI.begin();
+  CCSPI.begin();
   #endif
 }
 /****************************************************************
@@ -107,8 +109,8 @@ void ELECHOUSE_CC1101::SpiStart(void)
 void ELECHOUSE_CC1101::SpiEnd(void)
 {
   // disable SPI
-  SPI.endTransaction();
-  SPI.end();
+  CCSPI.endTransaction();
+  CCSPI.end();
 }
 /****************************************************************
 *FUNCTION NAME: GDO_Set()
@@ -145,7 +147,7 @@ void ELECHOUSE_CC1101::Reset (void)
 	delay(1);
 	digitalWrite(SS_PIN, LOW);
 	while(digitalRead(MISO_PIN));
-  SPI.transfer(CC1101_SRES);
+  CCSPI.transfer(CC1101_SRES);
   while(digitalRead(MISO_PIN));
 	digitalWrite(SS_PIN, HIGH);
 }
@@ -177,8 +179,8 @@ void ELECHOUSE_CC1101::SpiWriteReg(byte addr, byte value)
   SpiStart();
   digitalWrite(SS_PIN, LOW);
   while(digitalRead(MISO_PIN));
-  SPI.transfer(addr);
-  SPI.transfer(value); 
+  CCSPI.transfer(addr);
+  CCSPI.transfer(value); 
   digitalWrite(SS_PIN, HIGH);
   SpiEnd();
 }
@@ -195,10 +197,10 @@ void ELECHOUSE_CC1101::SpiWriteBurstReg(byte addr, byte *buffer, byte num)
   temp = addr | WRITE_BURST;
   digitalWrite(SS_PIN, LOW);
   while(digitalRead(MISO_PIN));
-  SPI.transfer(temp);
+  CCSPI.transfer(temp);
   for (i = 0; i < num; i++)
   {
-  SPI.transfer(buffer[i]);
+  CCSPI.transfer(buffer[i]);
   }
   digitalWrite(SS_PIN, HIGH);
   SpiEnd();
@@ -214,7 +216,7 @@ void ELECHOUSE_CC1101::SpiStrobe(byte strobe)
   SpiStart();
   digitalWrite(SS_PIN, LOW);
   while(digitalRead(MISO_PIN));
-  SPI.transfer(strobe);
+  CCSPI.transfer(strobe);
   digitalWrite(SS_PIN, HIGH);
   SpiEnd();
 }
@@ -231,8 +233,8 @@ byte ELECHOUSE_CC1101::SpiReadReg(byte addr)
   temp = addr| READ_SINGLE;
   digitalWrite(SS_PIN, LOW);
   while(digitalRead(MISO_PIN));
-  SPI.transfer(temp);
-  value=SPI.transfer(0);
+  CCSPI.transfer(temp);
+  value=CCSPI.transfer(0);
   digitalWrite(SS_PIN, HIGH);
   SpiEnd();
   return value;
@@ -251,10 +253,10 @@ void ELECHOUSE_CC1101::SpiReadBurstReg(byte addr, byte *buffer, byte num)
   temp = addr | READ_BURST;
   digitalWrite(SS_PIN, LOW);
   while(digitalRead(MISO_PIN));
-  SPI.transfer(temp);
+  CCSPI.transfer(temp);
   for(i=0;i<num;i++)
   {
-  buffer[i]=SPI.transfer(0);
+  buffer[i]=CCSPI.transfer(0);
   }
   digitalWrite(SS_PIN, HIGH);
   SpiEnd();
@@ -273,8 +275,8 @@ byte ELECHOUSE_CC1101::SpiReadStatus(byte addr)
   temp = addr | READ_BURST;
   digitalWrite(SS_PIN, LOW);
   while(digitalRead(MISO_PIN));
-  SPI.transfer(temp);
-  value=SPI.transfer(0);
+  CCSPI.transfer(temp);
+  value=CCSPI.transfer(0);
   digitalWrite(SS_PIN, HIGH);
   SpiEnd();
   return value;
@@ -1030,26 +1032,26 @@ else{m4DaRa = calc; i=1;}
 ****************************************************************/
 void ELECHOUSE_CC1101::RegConfigSettings(void) 
 {   
-    SpiWriteReg(CC1101_FSCTRL1,  0x06);
+    SpiWriteReg(CC1101_FSCTRL1,  0x0B);
     
     setCCMode(ccmode);
     setMHZ(MHz);
     
-    SpiWriteReg(CC1101_MDMCFG1,  0x02);
+    SpiWriteReg(CC1101_MDMCFG1,  0x22);
     SpiWriteReg(CC1101_MDMCFG0,  0xF8);
     SpiWriteReg(CC1101_CHANNR,   chan);
     SpiWriteReg(CC1101_DEVIATN,  0x47);
-    SpiWriteReg(CC1101_FREND1,   0x56);
+    SpiWriteReg(CC1101_FREND1,   0xB6);
     SpiWriteReg(CC1101_MCSM0 ,   0x18);
-    SpiWriteReg(CC1101_FOCCFG,   0x16);
+    SpiWriteReg(CC1101_FOCCFG,   0x1D);
     SpiWriteReg(CC1101_BSCFG,    0x1C);
     SpiWriteReg(CC1101_AGCCTRL2, 0xC7);
     SpiWriteReg(CC1101_AGCCTRL1, 0x00);
     SpiWriteReg(CC1101_AGCCTRL0, 0xB2);
-    SpiWriteReg(CC1101_FSCAL3,   0xE9);
-    SpiWriteReg(CC1101_FSCAL2,   0x2A);
+    SpiWriteReg(CC1101_FSCAL3,   0xEA);
+    SpiWriteReg(CC1101_FSCAL2,   0x0A);
     SpiWriteReg(CC1101_FSCAL1,   0x00);
-    SpiWriteReg(CC1101_FSCAL0,   0x1F);
+    SpiWriteReg(CC1101_FSCAL0,   0x11);
     SpiWriteReg(CC1101_FSTEST,   0x59);
     SpiWriteReg(CC1101_TEST2,    0x81);
     SpiWriteReg(CC1101_TEST1,    0x35);
